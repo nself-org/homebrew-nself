@@ -1,10 +1,10 @@
 class Nself < Formula
   desc "Production-ready self-hosted backend infrastructure"
   homepage "https://nself.org"
-  url "https://github.com/acamarata/nself/archive/refs/tags/v0.4.2.tar.gz"
-  sha256 "6a8178f0e67d4ff67b6752997c6e674b7d6a737e95848c4b275204ac40be8fca"
+  url "https://github.com/acamarata/nself/archive/refs/tags/v0.4.3.tar.gz"
+  sha256 "d1818f80ad5bf575db499f657dcc5cbcc385eaf5ac3c4e9ecbb973d430c14c80"
   license "Source-Available"
-  version "0.4.2"
+  version "0.4.3"
 
   depends_on "docker"
   depends_on "docker-compose"
@@ -12,19 +12,19 @@ class Nself < Formula
   def install
     # Install all source files to libexec
     libexec.install "src"
-
+    
     # Install templates
     libexec.install "templates" if File.exist?("templates")
-
+    
     # Create the main executable wrapper
     (bin/"nself").write <<~EOS
       #!/usr/bin/env bash
       exec "#{libexec}/src/cli/nself.sh" "$@"
     EOS
-
+    
     # Make it executable
     (bin/"nself").chmod 0755
-
+    
     # Install documentation
     doc.install "README.md", "LICENSE" if File.exist?("README.md")
     doc.install "docs" if File.exist?("docs")
@@ -34,11 +34,11 @@ class Nself < Formula
     # Create .nself directory structure
     nself_dir = File.expand_path("~/.nself")
     FileUtils.mkdir_p(nself_dir)
-
+    
     # Copy source and templates to ~/.nself
     FileUtils.cp_r("#{libexec}/src", nself_dir)
     FileUtils.cp_r("#{libexec}/templates", nself_dir) if File.exist?("#{libexec}/templates")
-
+    
     ohai "nself has been installed successfully!"
     ohai "Run 'nself init' to get started with your first project"
   end
