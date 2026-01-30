@@ -2,7 +2,7 @@ class Nself < Formula
   desc "ɳSelf v0.9.6: Command Consolidation - Streamlined CLI from 79 to 31 commands with improved hierarchy and documentation"
   homepage "https://nself.org"
   url "https://github.com/acamarata/nself/archive/refs/tags/v0.9.6.tar.gz"
-  sha256 "dfd46484cd744dd9b64297363389302aa6d1242bc2a6c9c0fdf6fe721edcbaee"
+  sha256 "PLACEHOLDER_SHA256"
   license "Source-Available"
   version "0.9.6"
 
