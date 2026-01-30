@@ -1,33 +1,37 @@
 class Nself < Formula
-  desc "v0.9.0: Enterprise multi-tenant platform with billing, white-label customization, OAuth handlers, file upload pipeline & 150+ commands"
+  desc "ɳSelf v0.9.6: Command Consolidation - Streamlined CLI from 79 to 31 commands with improved hierarchy and documentation"
   homepage "https://nself.org"
-  url "https://github.com/acamarata/nself/archive/refs/tags/v0.9.0.tar.gz"
-  sha256 "514a0214af45f6f2cd9e3e0151059a8b42278d8d569b859eda058935fa5d9b01"
+  url "https://github.com/acamarata/nself/archive/refs/tags/v0.9.6.tar.gz"
+  sha256 "dfd46484cd744dd9b64297363389302aa6d1242bc2a6c9c0fdf6fe721edcbaee"
   license "Source-Available"
-  version "0.9.0"
+  version "0.9.6"
 
   depends_on "docker"
   depends_on "docker-compose"
 
   def install
-    # Install all source files to libexec
-    libexec.install "src"
-    
-    # Install templates
-    libexec.install "templates" if File.exist?("templates")
-    
+    # Install ONLY essential source directories to libexec (exclude tests, examples)
+    libexec.mkpath
+
+    # Copy VERSION file
+    (libexec/"src").install "src/VERSION" if File.exist?("src/VERSION")
+
+    # Install only essential directories (exclude tests, examples, development files)
+    %w[cli lib templates services].each do |dir|
+      (libexec/"src").install "src/#{dir}" if File.directory?("src/#{dir}")
+    end
+
     # Create the main executable wrapper
     (bin/"nself").write <<~EOS
       #!/usr/bin/env bash
       exec "#{libexec}/src/cli/nself.sh" "$@"
     EOS
-    
+
     # Make it executable
     (bin/"nself").chmod 0755
-    
-    # Install documentation
-    doc.install "README.md", "LICENSE" if File.exist?("README.md")
-    doc.install "docs" if File.exist?("docs")
+
+    # Install minimal documentation (LICENSE only, docs available online)
+    doc.install "LICENSE" if File.exist?("LICENSE")
   end
 
   def post_install
@@ -39,8 +43,8 @@ class Nself < Formula
     FileUtils.cp_r("#{libexec}/src", nself_dir)
     FileUtils.cp_r("#{libexec}/templates", nself_dir) if File.exist?("#{libexec}/templates")
     
-    ohai "nself has been installed successfully!"
-    ohai "Run 'nself init' to get started with your first project"
+    ohai "ɳSelf has been installed successfully!"
+    ohai "Run 'nself init' to get started with your first ɳSelf project"
   end
 
   test do
