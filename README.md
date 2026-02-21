@@ -29,9 +29,13 @@ See the main [nself repository](https://github.com/nself-org/cli) for full docum
 
 ## Current Version
 
-- **v0.4.0** - Production-ready release
+- **v0.9.9** - Current release
 
 ## Support
 
 - GitHub: https://github.com/nself-org/cli
 - Issues: https://github.com/nself-org/cli/issues
+
+## About
+
+Part of the [nself](https://nself.org) platform · [GitHub](https://github.com/nself-org)
