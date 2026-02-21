@@ -1,11 +1,11 @@
 # Homebrew Tap for nself
 
-Official Homebrew tap for [nself](https://github.com/acamarata/nself) - Production-ready self-hosted backend infrastructure.
+Official Homebrew tap for [nself](https://github.com/nself-org/cli) - Production-ready self-hosted backend infrastructure.
 
 ## Installation
 
 ```bash
-brew tap acamarata/nself
+brew tap nself-org/nself
 brew install nself
 ```
 
@@ -25,7 +25,7 @@ nself urls
 
 ## Documentation
 
-See the main [nself repository](https://github.com/acamarata/nself) for full documentation.
+See the main [nself repository](https://github.com/nself-org/cli) for full documentation.
 
 ## Current Version
 
@@ -33,5 +33,5 @@ See the main [nself repository](https://github.com/acamarata/nself) for full doc
 
 ## Support
 
-- GitHub: https://github.com/acamarata/nself
-- Issues: https://github.com/acamarata/nself/issues
+- GitHub: https://github.com/nself-org/cli
+- Issues: https://github.com/nself-org/cli/issues
