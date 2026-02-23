@@ -2,12 +2,16 @@ class Nself < Formula
   desc "Self-hosted backend infrastructure CLI — spin up Postgres, Hasura, Auth, and Nginx in minutes"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v0.9.9.tar.gz"
+  # sha256 verified against v0.9.9 release tarball at time of release
   sha256 "793ae62e6a5a778fc19c63b48c71e33833b2d98df1d8e2a35b5af87f597320d5"
   license "MIT"
   version "0.9.9"
 
-  depends_on "docker"
-  depends_on "docker-compose"
+  depends_on "bash" => :recommended  # Requires Bash 3.2+
+  depends_on "docker" => :recommended
+  # docker-compose is now a Docker CLI plugin in Docker Desktop v2+.
+  # Keep as optional dependency for standalone docker-compose installations.
+  depends_on "docker-compose" => :optional
 
   def install
     # Install ONLY essential source directories to libexec (exclude tests, examples)
@@ -59,6 +63,10 @@ class Nself < Formula
         nself start
 
       Documentation: https://docs.nself.org
+
+      Note: Your configuration is stored in ~/.nself
+      It is preserved when you uninstall nself. To fully remove:
+        rm -rf ~/.nself
     EOS
   end
 
