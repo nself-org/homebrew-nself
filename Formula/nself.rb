@@ -3,7 +3,7 @@ class Nself < Formula
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v0.9.9.tar.gz"
   sha256 "793ae62e6a5a778fc19c63b48c71e33833b2d98df1d8e2a35b5af87f597320d5"
-  license "Source-Available"
+  license "MIT"
   version "0.9.9"
 
   depends_on "docker"
