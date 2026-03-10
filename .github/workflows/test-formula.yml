@@ -1,0 +1,43 @@
+name: Test Formula
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test nself Homebrew Formula
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Audit formula syntax
+        run: brew audit --strict Formula/nself.rb
+
+      - name: Install formula from source
+        run: brew install --build-from-source Formula/nself.rb
+
+      - name: Verify version output
+        run: |
+          nself --version
+          nself --version | grep -E '^[0-9]+\.[0-9]+\.[0-9]+'
+
+      - name: Run brew test
+        run: brew test Formula/nself.rb
+
+      - name: Verify key commands are available
+        run: |
+          nself help
+          nself plugin list
+
+      - name: Verify binary is in PATH
+        run: |
+          which nself
+          test -x "$(which nself)"

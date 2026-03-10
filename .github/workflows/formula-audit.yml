@@ -1,0 +1,66 @@
+name: Formula Audit
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+      - published
+
+jobs:
+  audit:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update Homebrew
+        run: brew update
+
+      - name: Audit formula (strict)
+        run: brew audit --strict nself
+
+      - name: Test formula — --version
+        run: |
+          brew test nself
+          nself --version
+
+      - name: Test formula — --help
+        run: nself --help
+
+      - name: Verify formula SHA256 against release tarball
+        if: env.GITHUB_TOKEN != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract URL and expected SHA256 from the formula
+          FORMULA_FILE=$(find . -name "nself.rb" | head -1)
+          if [ -z "$FORMULA_FILE" ]; then
+            echo "ERROR: nself.rb formula not found"
+            exit 1
+          fi
+
+          TARBALL_URL=$(grep -E '^\s+url ' "$FORMULA_FILE" | sed 's/.*url "//' | sed 's/".*//')
+          EXPECTED_SHA=$(grep -E '^\s+sha256 ' "$FORMULA_FILE" | sed 's/.*sha256 "//' | sed 's/".*//')
+
+          if [ -z "$TARBALL_URL" ] || [ -z "$EXPECTED_SHA" ]; then
+            echo "SKIP: Could not parse URL or SHA256 from formula"
+            exit 0
+          fi
+
+          echo "Downloading tarball: $TARBALL_URL"
+          curl -fsSL -o /tmp/nself-release.tar.gz "$TARBALL_URL"
+
+          ACTUAL_SHA=$(shasum -a 256 /tmp/nself-release.tar.gz | awk '{print $1}')
+
+          echo "Expected SHA256: $EXPECTED_SHA"
+          echo "Actual SHA256:   $ACTUAL_SHA"
+
+          if [ "$EXPECTED_SHA" = "$ACTUAL_SHA" ]; then
+            echo "PASS: SHA256 matches"
+          else
+            echo "FAIL: SHA256 mismatch"
+            exit 1
+          fi

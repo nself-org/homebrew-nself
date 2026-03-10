@@ -1,0 +1,89 @@
+name: Update Formula on Release
+
+on:
+  repository_dispatch:
+    types: [cli-release]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to update to (e.g. v1.0.0)'
+        required: true
+      sha256:
+        description: 'SHA256 of the release tarball (leave blank to compute)'
+        required: false
+
+jobs:
+  update:
+    name: Update nself.rb formula
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version and SHA256
+        id: info
+        run: |
+          # Prefer workflow_dispatch input, then repository_dispatch payload
+          VERSION="${{ github.event.inputs.version || github.event.client_payload.version }}"
+          SHA256="${{ github.event.inputs.sha256 || github.event.client_payload.sha256 }}"
+
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: version not provided"
+            exit 1
+          fi
+
+          # Normalize: ensure 'v' prefix
+          case "$VERSION" in
+            v*) : ;;
+            *)  VERSION="v${VERSION}" ;;
+          esac
+
+          # Strip 'v' prefix for the plain version number used in formula
+          PLAIN_VERSION="${VERSION#v}"
+
+          TARBALL_URL="https://github.com/nself-org/cli/archive/refs/tags/${VERSION}.tar.gz"
+
+          # Compute SHA256 if not supplied
+          if [ -z "$SHA256" ]; then
+            echo "Computing SHA256 for ${TARBALL_URL}..."
+            SHA256=$(curl -fsSL "$TARBALL_URL" | sha256sum | awk '{print $1}')
+          fi
+
+          echo "version=${VERSION}"           >> "$GITHUB_OUTPUT"
+          echo "plain_version=${PLAIN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tarball_url=${TARBALL_URL}"   >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA256}"             >> "$GITHUB_OUTPUT"
+
+      - name: Update Formula/nself.rb
+        run: |
+          VERSION="${{ steps.info.outputs.plain_version }}"
+          TARBALL_URL="${{ steps.info.outputs.tarball_url }}"
+          SHA256="${{ steps.info.outputs.sha256 }}"
+          FORMULA="Formula/nself.rb"
+
+          # Update url
+          sed -i "s|url \"https://github.com/nself-org/cli/archive/refs/tags/.*\"|url \"${TARBALL_URL}\"|" "$FORMULA"
+
+          # Update sha256
+          sed -i "s|sha256 \"[a-f0-9]*\"|sha256 \"${SHA256}\"|" "$FORMULA"
+
+          # Update version
+          sed -i "s|version \"[0-9.]*\"|version \"${VERSION}\"|" "$FORMULA"
+
+          echo "Formula updated:"
+          grep -E 'url|sha256|version' "$FORMULA"
+
+      - name: Verify formula syntax
+        run: |
+          # Basic Ruby syntax check (brew audit not available without Homebrew)
+          ruby -c Formula/nself.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/nself.rb
+          git commit -m "formula: update nself to ${{ steps.info.outputs.version }}"
+          git push origin main

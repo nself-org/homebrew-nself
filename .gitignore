@@ -36,3 +36,10 @@ FEEDBACK.md
 NEXT.md
 TRACKING.md
 PLAN.md
+.vscode/*
+.aider/
+.aider.chat.history.md
+.continue/
+.windsurf/
+.gemini/
+.codeium/
