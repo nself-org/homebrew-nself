@@ -21,10 +21,10 @@ jobs:
       - name: Install bats
         run: brew install bats-core
 
-      - name: Run static formula tests
+      - name: Run static formula tests (file inspection only)
         # Static tier: file inspection only — no network, no install required.
         # Verifies formula has required fields (desc, homepage, url, sha256, install, test).
-        run: bats tests/test-formula.bats
+        run: bats --filter "static:" tests/test-formula.bats
 
       - name: Audit formula syntax
         # brew audit --strict checks Ruby syntax and SPDX license — no install required.
