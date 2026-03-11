@@ -56,7 +56,8 @@ _require_nself() {
 
 @test "static: formula has test block" {
   [ -f "$FORMULA_FILE" ]
-  grep -q 'def test' "$FORMULA_FILE"
+  # Homebrew DSL uses `test do` blocks, not `def test` method syntax
+  grep -q 'test do' "$FORMULA_FILE"
 }
 
 # ---------------------------------------------------------------------------
