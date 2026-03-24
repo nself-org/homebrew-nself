@@ -1,11 +1,11 @@
 class Nself < Formula
-  desc "ɳSelf v0.9.9-rc5: Production Ready - Complete testing, documentation, and production features for v1.0 LTS"
+  desc "ɳSelf v1.0.0 LTS: Self-hosted backend infrastructure CLI"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v0.9.9-rc5.tar.gz"
-  # TODO: Update sha256 after v0.9.9-rc5 release tag is created
-  sha256 "d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed"
-  license "Source-Available"
-  version "0.9.9-rc5"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.0.tar.gz"
+  # TODO: Update sha256 after v1.0.0 release tag is created
+  sha256 "SKIP"
+  license "MIT"
+  version "1.0.0"
 
   depends_on "docker"
   depends_on "docker-compose"
