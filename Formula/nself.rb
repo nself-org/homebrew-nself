@@ -2,8 +2,7 @@ class Nself < Formula
   desc "ɳSelf v1.0.0 LTS: Self-hosted backend infrastructure CLI"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.0.tar.gz"
-  # TODO: Update sha256 after v1.0.0 release tag is created
-  sha256 "SKIP"
+  sha256 "44adc0fac2e69ce00eeff505f357ceb2d51af4e7fd4b9136e33bdec22dc0a500"
   license "MIT"
   version "1.0.0"
 
