@@ -1,9 +1,9 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.0 LTS: Self-hosted backend infrastructure CLI"
+  desc "ɳSelf v0.9.9-rc3: Production Ready - Complete testing, documentation, and production features for v1.0 LTS"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "44adc0fac2e69ce00eeff505f357ceb2d51af4e7fd4b9136e33bdec22dc0a500"
-  license "MIT"
+  license "Source-Available"
   version "1.0.0"
 
   depends_on "docker"
