@@ -6,45 +6,20 @@ class Nself < Formula
   license "Source-Available"
   version "1.0.1"
 
+  depends_on "go" => :build
   depends_on "docker"
   depends_on "docker-compose"
 
   def install
-    # Install ONLY essential source directories to libexec (exclude tests, examples)
-    libexec.mkpath
+    ldflags = %W[
+      -s -w
+      -X github.com/nself-org/cli/internal/version.Version=#{version}
+    ]
 
-    # Copy VERSION file
-    (libexec/"src").install "src/VERSION" if File.exist?("src/VERSION")
+    system "go", "build", "-mod=vendor", "-ldflags", ldflags.join(" "),
+           "-o", bin/"nself", "./cmd/nself/"
 
-    # Install only essential directories (exclude tests, examples, development files)
-    %w[cli lib templates services].each do |dir|
-      (libexec/"src").install "src/#{dir}" if File.directory?("src/#{dir}")
-    end
-
-    # Create the main executable wrapper
-    (bin/"nself").write <<~EOS
-      #!/usr/bin/env bash
-      exec "#{libexec}/src/cli/nself.sh" "$@"
-    EOS
-
-    # Make it executable
-    (bin/"nself").chmod 0755
-
-    # Install minimal documentation (LICENSE only, docs available online)
     doc.install "LICENSE" if File.exist?("LICENSE")
-  end
-
-  def post_install
-    # Create .nself directory structure
-    nself_dir = File.expand_path("~/.nself")
-    FileUtils.mkdir_p(nself_dir)
-    
-    # Copy source and templates to ~/.nself
-    FileUtils.cp_r("#{libexec}/src", nself_dir)
-    FileUtils.cp_r("#{libexec}/templates", nself_dir) if File.exist?("#{libexec}/templates")
-    
-    ohai "ɳSelf has been installed successfully!"
-    ohai "Run 'nself init' to get started with your first ɳSelf project"
   end
 
   test do
