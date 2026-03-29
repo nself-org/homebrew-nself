@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v0.9.9-rc3: Production Ready - Complete testing, documentation, and production features for v1.0 LTS"
+  desc "ɳSelf v1.0.1: Production Ready - Complete self-hosted backend infrastructure for v1.0 LTS"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v0.9.9-final.tar.gz"
-  sha256 "a114ac254b4b18f3590cec278fd80cc2e9dccc9efdefc6d1fbc337e0482b2252"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.1.tar.gz"
+  sha256 "b712a6398e27769cf6af7b2ecbd6f234c81601c8bfb631c52519e7762ba0b34a"
   license "Source-Available"
-  version "0.9.9-final"
+  version "1.0.1"
 
   depends_on "docker"
   depends_on "docker-compose"
