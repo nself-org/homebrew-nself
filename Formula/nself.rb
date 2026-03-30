@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.1: Production Ready - Complete self-hosted backend infrastructure for v1.0 LTS"
+  desc "ɳSelf v1.0.2: Critical local dev fixes, nself trust, migration fix"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.1.tar.gz"
-  sha256 "b712a6398e27769cf6af7b2ecbd6f234c81601c8bfb631c52519e7762ba0b34a"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.2.tar.gz"
+  sha256 "86d870a366b2286f06dc457863e69a5b04786cee001bdb2692164fbea93b7954"
   license "Source-Available"
-  version "1.0.1"
+  version "1.0.2"
 
   depends_on "go" => :build
   depends_on "docker"
