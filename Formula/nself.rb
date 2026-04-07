@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.2: Critical local dev fixes, nself trust, migration fix"
+  desc "ɳSelf v1.0.3: Security hardening, 87 plugins, nself security command"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.2.tar.gz"
-  sha256 "86d870a366b2286f06dc457863e69a5b04786cee001bdb2692164fbea93b7954"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.3.tar.gz"
+  sha256 "e8bf5ce2fa6201a281fa60a4dcf3904237c5b79e379412d8f13bfa81006562c0"
   license "Source-Available"
-  version "1.0.2"
+  version "1.0.3"
 
   depends_on "go" => :build
   depends_on "docker"
