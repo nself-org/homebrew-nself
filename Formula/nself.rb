@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.3: Security hardening, 87 plugins, nself security command"
+  desc "ɳSelf v1.0.4: ɳClaw production-ready, knowledge graph, agent dashboard, image gen"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.3.tar.gz"
-  sha256 "e8bf5ce2fa6201a281fa60a4dcf3904237c5b79e379412d8f13bfa81006562c0"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.4.tar.gz"
+  sha256 "PLACEHOLDER_UPDATE_AFTER_TAG"
   license "Source-Available"
-  version "1.0.3"
+  version "1.0.4"
 
   depends_on "go" => :build
   depends_on "docker"
