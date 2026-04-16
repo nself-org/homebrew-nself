@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.7: P92 Wave 7 patch — billing subcommand fix, JWT auto-persist, doctor tests"
+  desc "ɳSelf v1.0.8: P92 quick-fix — correct plugin-ai default URL (ai:3680 → plugin-ai:3709)"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.7.tar.gz"
-  sha256 "6a903853b617fe8fd5eadf5ae6ecc2f0136a351342708ed669eb1a25f098eafa"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.8.tar.gz"
+  sha256 "a722f752b73889675278e34537d96e890703a801d3f2a39f67a6de07116a098a"
   license "Source-Available"
-  version "1.0.7"
+  version "1.0.8"
 
   depends_on "go" => :build
   depends_on "docker"
