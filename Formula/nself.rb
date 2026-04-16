@@ -1,10 +1,10 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.4: ɳClaw production-ready, knowledge graph, agent dashboard, image gen"
+  desc "ɳSelf v1.0.6: P89/P90 + P92 coordinated release — goreleaser, compliance checker, pro plugin hardening"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.4.tar.gz"
-  sha256 "c915d8337f12836a571ca2feb6c13c004a3764bffc69631916ae8c8d993ea944"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.6.tar.gz"
+  sha256 "3f2e43d41a17dab3a6e785623a9b357ecaca99d892f0f20235ccb4905c392f10"
   license "Source-Available"
-  version "1.0.4"
+  version "1.0.6"
 
   depends_on "go" => :build
   depends_on "docker"
