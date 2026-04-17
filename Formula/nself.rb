@@ -1,5 +1,5 @@
 class Nself < Formula
-  desc "ɳSelf v1.0.8: P92 quick-fix — correct plugin-ai default URL (ai:3680 → plugin-ai:3709)"
+  desc "Self-hosted backend infrastructure CLI: Postgres, GraphQL, Auth, Nginx in 5 minutes"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.8.tar.gz"
   sha256 "a722f752b73889675278e34537d96e890703a801d3f2a39f67a6de07116a098a"
