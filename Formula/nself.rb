@@ -2,8 +2,7 @@ class Nself < Formula
   desc "Self-hosted backend infrastructure CLI: Postgres, GraphQL, Auth, Nginx in 5 minutes"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.9.tar.gz"
-  # sha256 pending release tarball — compute with: curl -L <url> | shasum -a 256
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  sha256 "93d671308f6338b8a2881d0d028e00e5bbc83d207ef1da3acb63b8a3e10b5f7e"
   license "Source-Available"
   version "1.0.9"
 
