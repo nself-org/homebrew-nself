@@ -1,0 +1,81 @@
+name: Install Smoke Test
+
+# Full `brew install` smoke test — runs on every bump (push to main touching
+# the formula) and on every PR. Complements the static `test-formula.yml`
+# workflow which only inspects the formula file. This workflow actually
+# installs nself via Homebrew and verifies the binary runs.
+#
+# Per S34-T06: every formula bump must pass this smoke test before merge.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Formula/nself.rb'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Formula/nself.rb'
+  workflow_dispatch:  # allow manual re-runs on demand
+
+jobs:
+  install-smoke:
+    name: brew install smoke (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-13, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Tap from local checkout
+        run: |
+          # Install this checkout as a local tap so `brew install` uses OUR
+          # version of the formula, not whatever is on the registry.
+          brew tap-new nself-org/nself --no-git
+          cp Formula/nself.rb "$(brew --repository nself-org/nself)/Formula/nself.rb"
+
+      - name: brew install --build-from-source nself
+        run: |
+          brew install --build-from-source --verbose nself-org/nself/nself
+
+      - name: Verify nself version
+        run: |
+          which nself
+          nself --version
+          # version output must match the formula's `version` stanza
+          formula_version=$(grep -E '^\s+version\s+"' Formula/nself.rb | sed -E 's/.*"([^"]+)".*/\1/')
+          installed_version=$(nself --version | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1 | sed 's/^v//')
+          echo "formula=$formula_version installed=$installed_version"
+          if [ "$formula_version" != "$installed_version" ]; then
+            echo "::error::Formula version ($formula_version) does not match installed binary version ($installed_version)"
+            exit 1
+          fi
+
+      - name: Verify nself help runs
+        run: nself help
+
+      - name: Verify core subcommands are wired up
+        run: |
+          nself doctor --help
+          nself init --help
+          nself build --help
+          nself start --help
+          nself plugin --help
+
+      - name: brew test (formula self-test block)
+        run: brew test nself-org/nself/nself
+
+      - name: brew uninstall (cleanup validation)
+        run: |
+          brew uninstall nself-org/nself/nself
+          if command -v nself >/dev/null 2>&1; then
+            echo "::error::nself binary still on PATH after uninstall"
+            exit 1
+          fi
