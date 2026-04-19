@@ -1,6 +1,13 @@
 # Contributing to homebrew-nself
 
-This is the official Homebrew tap for the nSelf CLI.
+## What This Is
+
+The official Homebrew tap for the nSelf CLI. The formula auto-syncs when a new GitHub release is published.
+
+## Prerequisites
+
+- macOS with Homebrew
+- Ruby 3.0+ (for formula development)
 
 ## Development Setup
 
@@ -24,6 +31,11 @@ This is the official Homebrew tap for the nSelf CLI.
    brew audit --strict Formula/nself.rb
    ```
 
+5. Run the formula's test block:
+   ```bash
+   brew test Formula/nself.rb
+   ```
+
 ## Code Style
 
 - Ruby formula follows standard Homebrew conventions
@@ -32,12 +44,19 @@ This is the official Homebrew tap for the nSelf CLI.
 
 ## Pull Request Process
 
+The formula auto-updates from GitHub releases. Manual edits should only fix bugs in the formula itself, not bump versions.
+
 1. Fork the repository
 2. Create a feature branch
 3. Update the formula (usually `url`, `sha256`, `version`)
 4. Run `ruby -c Formula/nself.rb` to verify syntax
-5. Test with `brew install --build-from-source`
-6. Submit a PR
+5. `brew audit --strict` must pass
+6. Test with `brew install --build-from-source`
+7. Submit a PR against `main`
+
+## Commit Style
+
+Conventional commits: `chore:`, `fix:`
 
 ## Version Updates
 
