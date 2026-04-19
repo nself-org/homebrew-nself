@@ -3,7 +3,7 @@ class Nself < Formula
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.9.tar.gz"
   sha256 "93d671308f6338b8a2881d0d028e00e5bbc83d207ef1da3acb63b8a3e10b5f7e"
-  license "Source-Available"
+  license "MIT"
   version "1.0.9"
 
   depends_on "go" => :build
