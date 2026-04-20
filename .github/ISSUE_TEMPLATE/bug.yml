@@ -1,0 +1,59 @@
+name: Bug Report
+description: Something isn't working with the Homebrew formula
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please search [existing issues](https://github.com/nself-org/homebrew-nself/issues).
+        For security issues, follow the process in [SECURITY.md](https://github.com/nself-org/homebrew-nself/blob/main/.github/SECURITY.md) — do not open a public issue.
+  - type: input
+    id: macos_version
+    attributes:
+      label: macOS version
+      placeholder: "e.g. 14.4.1 (Sonoma)"
+    validations:
+      required: true
+  - type: input
+    id: homebrew_version
+    attributes:
+      label: Homebrew version
+      placeholder: Run `brew --version` and paste output
+    validations:
+      required: true
+  - type: input
+    id: formula_version
+    attributes:
+      label: Formula version installed
+      placeholder: Run `brew info nself` and paste the version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `brew tap nself-org/nself`
+        2. Run `brew install nself`
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Full error output
+      render: shell
+    validations:
+      required: true
