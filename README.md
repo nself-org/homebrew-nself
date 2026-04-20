@@ -5,8 +5,13 @@ Official Homebrew tap for [nself](https://github.com/nself-org/cli) - Production
 ## Installation
 
 ```bash
-brew tap nself-org/nself
-brew install nself
+brew install nself-org/nself/nself
+```
+
+This installs the tap and the formula in one step. To update later:
+
+```bash
+brew upgrade nself
 ```
 
 ## Usage
