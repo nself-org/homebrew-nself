@@ -29,7 +29,7 @@ See the main [nself repository](https://github.com/nself-org/cli) for full docum
 
 ## Current Version
 
-- **v1.0.8** - Current release
+- **v1.0.9** - Current release
 
 ## Support
 
