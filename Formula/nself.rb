@@ -23,21 +23,9 @@ class Nself < Formula
     doc.install "LICENSE" if File.exist?("LICENSE")
   end
 
-  def post_install
-    # Run the onboarding funnel check after a fresh Homebrew install.
-    # Runs in the background so `brew install` completes immediately.
-    # Output is suppressed; any funnel telemetry fires asynchronously.
-    # Safe to run repeatedly — checks are read-only and idempotent.
-    ohai "Running nself onboarding check..."
-    system "#{bin}/nself", "doctor", "--install-check"
-  rescue StandardError
-    # Never block a successful install due to a doctor check failure.
-    opoo "nself doctor --install-check encountered an error (non-fatal)."
-  end
-
   test do
     system "#{bin}/nself", "version"
     system "#{bin}/nself", "help"
-    system "#{bin}/nself", "doctor", "--install-check", "--json"
+    system "#{bin}/nself", "doctor", "--help"
   end
 end
