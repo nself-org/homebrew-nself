@@ -36,12 +36,15 @@ jobs:
 
       - name: Tap from local checkout
         run: |
-          # Install this checkout as a local tap so `brew install` uses OUR
-          # version of the formula, not whatever is on the registry.
-          # Clean up any stale tap from a previous run first.
-          brew tap-remove nself-org/nself 2>/dev/null || true
-          brew tap-new nself-org/nself --no-git
-          cp Formula/nself.rb "$(brew --repository nself-org/nself)/Formula/nself.rb"
+          # setup-homebrew already symlinks this repo as the nself-org/nself tap.
+          # Using brew tap-new fails because the tap already exists.
+          # Instead: register it if missing, then ensure the formula is current.
+          if ! brew tap | grep -q 'nself-org/nself'; then
+            brew tap nself-org/nself "$(pwd)"
+          fi
+          tap_path="$(brew --repository nself-org/nself)"
+          echo "Tap path: $tap_path"
+          cp Formula/nself.rb "$tap_path/Formula/nself.rb"
 
       - name: brew install --build-from-source nself
         run: |
