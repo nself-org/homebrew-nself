@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+        uses: Homebrew/actions/setup-homebrew@cf31444e770b9919bb21e695d66f56c39cfd3dee  # no-tags; pinned 2026-05-03
 
       - name: Audit formula syntax (strict)
         # brew audit --strict validates Ruby syntax, SPDX license, and formula structure
@@ -45,25 +45,41 @@ jobs:
             exit 1
           fi
 
-          TARBALL_URL=$(grep -E '^\s+url ' "$FORMULA_FILE" | sed 's/.*url "//' | sed 's/".*//')
-          EXPECTED_SHA=$(grep -E '^\s+sha256 ' "$FORMULA_FILE" | sed 's/.*sha256 "//' | sed 's/".*//')
+          TARBALL_URL=$(grep -E '^\s+url ' "$FORMULA_FILE" | sed 's/.*url "//' | sed 's/".*//' | tr -d '[:space:]')
+          EXPECTED_SHA=$(grep -E '^\s+sha256 ' "$FORMULA_FILE" | sed 's/.*sha256 "//' | sed 's/".*//' | tr -d '[:space:]')
 
           if [ -z "$TARBALL_URL" ] || [ -z "$EXPECTED_SHA" ]; then
             echo "SKIP: Could not parse URL or SHA256 from formula"
             exit 0
           fi
 
+          # Validate expected SHA is a 64-char lowercase hex string (sha256 format).
+          # Catches truncation, accidental quotes, or copy-paste errors before download.
+          if ! echo "$EXPECTED_SHA" | grep -qE '^[a-f0-9]{64}$'; then
+            echo "::error::Formula SHA256 is malformed: '$EXPECTED_SHA'"
+            echo "Expected format: 64 lowercase hex chars (sha256 digest)"
+            exit 1
+          fi
+
           echo "Downloading tarball: $TARBALL_URL"
-          curl -fsSL -o /tmp/nself-release.tar.gz "$TARBALL_URL"
+          if ! curl -fsSL -o /tmp/nself-release.tar.gz "$TARBALL_URL"; then
+            echo "::error::Failed to download tarball from $TARBALL_URL"
+            echo "Verify the release tag exists and the URL is reachable."
+            exit 1
+          fi
 
-          ACTUAL_SHA=$(shasum -a 256 /tmp/nself-release.tar.gz | awk '{print $1}')
+          TARBALL_SIZE=$(wc -c < /tmp/nself-release.tar.gz | tr -d '[:space:]')
+          ACTUAL_SHA=$(shasum -a 256 /tmp/nself-release.tar.gz | awk '{print $1}' | tr -d '[:space:]')
 
+          echo "Tarball size:    ${TARBALL_SIZE} bytes"
           echo "Expected SHA256: $EXPECTED_SHA"
           echo "Actual SHA256:   $ACTUAL_SHA"
 
           if [ "$EXPECTED_SHA" = "$ACTUAL_SHA" ]; then
             echo "PASS: SHA256 matches"
           else
-            echo "FAIL: SHA256 mismatch"
+            echo "::error::Formula SHA256 does not match the released tarball."
+            echo "Action required: update Formula/nself.rb sha256 field to: $ACTUAL_SHA"
+            echo "Source URL:      $TARBALL_URL"
             exit 1
           fi
