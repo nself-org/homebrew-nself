@@ -3,7 +3,7 @@ class Nself < Formula
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.1.0.tar.gz"
   # sha256 computed from https://github.com/nself-org/cli/archive/refs/tags/v1.1.0.tar.gz
-  sha256 "26100f068ee6d96fa46fa0026052f67242c3675c4b057814a350ac917ee576d2"
+  sha256 "f766b1d045d124e64d586b63718eac004487727d39cf51c9f692e633d25586a7"
   license "MIT"
   version "1.1.0"
 
