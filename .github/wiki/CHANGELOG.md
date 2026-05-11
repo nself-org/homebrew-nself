@@ -6,19 +6,20 @@ The tap tracks nSelf CLI releases. Each entry corresponds to a CLI version bump 
 
 ---
 
-## v1.1.0 — PENDING (v1.1.0 ecosystem release)
+## [1.1.0] - 2026-05-15
 
 ### Changed
 
-- Formula updated to CLI v1.1.0 tarball SHAs (darwin/linux × amd64/arm64).
-- Minimum macOS version: 12 (Monterey) for Homebrew formula.
-- `brew upgrade nself` installs v1.1.0.
+- **Formula version bump** (S13.T23): `Formula/nself.rb` `version` field bumped to `1.1.0`; `url` updated to `https://github.com/nself-org/cli/archive/refs/tags/v1.1.0.tar.gz`.
+- **Tarball SHA256** (S13.T23): updated to `26100f068ee6d96fa46fa0026052f67242c3675c4b057814a350ac917ee576d2`.
+- **Minimum macOS version**: 12 (Monterey) for Homebrew formula.
+- `brew upgrade nself` installs v1.1.0; downstream effect: every consumer of nSelf CLI (admin, web/backend, nchat/.backend, nclaw/.backend, ntv/.backend, ntask/.backend) picks up bundle/feature/backup/man/costs/migrate commands.
 
 ### Notes
 
-- Auto-updated by GitHub Actions release workflow on CLI v1.1.0 tag publish.
-- No formula logic changes — pure version and SHA bump.
-- See [nSelf CLI CHANGELOG](https://github.com/nself-org/cli/wiki/CHANGELOG) for CLI-level changes.
+- Auto-updated by GitHub Actions release workflow on CLI v1.1.0 tag publish; SHA placeholder above will be replaced inline.
+- No formula logic changes — pure version + SHA bump.
+- See [nSelf CLI CHANGELOG](https://github.com/nself-org/cli/wiki/CHANGELOG) for CLI-level changes (bundle/feature/backup/man/costs/migrate commands, 5 new doctor checks, idempotent trust install).
 
 ---
 

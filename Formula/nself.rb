@@ -1,11 +1,11 @@
 class Nself < Formula
   desc "Self-hosted backend infrastructure CLI: Postgres, GraphQL, Auth, Nginx in 5 minutes"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.0.16.tar.gz"
-  # sha256 computed from https://github.com/nself-org/cli/archive/refs/tags/v1.0.16.tar.gz
-  sha256 "ab31df3826b75b75c4e4576fc036185d4b83fda75259707a1d1909b0f63b593d"
+  url "https://github.com/nself-org/cli/archive/refs/tags/v1.1.0.tar.gz"
+  # sha256 computed from https://github.com/nself-org/cli/archive/refs/tags/v1.1.0.tar.gz
+  sha256 "26100f068ee6d96fa46fa0026052f67242c3675c4b057814a350ac917ee576d2"
   license "MIT"
-  version "1.0.16"
+  version "1.1.0"
 
   depends_on "go" => :build
   depends_on "docker"
