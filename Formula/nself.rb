@@ -3,9 +3,9 @@ class Nself < Formula
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.1.1.tar.gz"
   # sha256 computed from https://github.com/nself-org/cli/archive/refs/tags/v1.1.1.tar.gz
-  sha256 "87b43d1165dffc3038487146731ae26edc0057f08acb4f855882ff6913009bc9"
+  sha256 "881c7465d5455fc04a7752482820e29f98e8e26db14cab2196a8bcd2dc4f6c24"
   license "MIT"
-  version "1.1.1"
+  version "1.1.2"
 
   depends_on "go" => :build
   depends_on "docker"
