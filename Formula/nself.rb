@@ -6,7 +6,7 @@ class Nself < Formula
   # (auto-generated /archive/refs/tags/*.tar.gz is unstable across GitHub CDN regions)
   sha256 "c1fc2e95464bf0b546455d68ae34f2f8f4d873163a7a2863320c89b3930d2fbc"
   license "MIT"
-  version "1.1.3"
+  version "1.1.1"
 
   depends_on "go" => :build
   depends_on "docker"
