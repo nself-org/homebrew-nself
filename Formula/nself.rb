@@ -2,7 +2,7 @@ class Nself < Formula
   desc "Self-hosted backend infrastructure CLI: Postgres, GraphQL, Auth, Nginx in 5 minutes"
   homepage "https://nself.org"
   url "https://github.com/nself-org/cli/archive/refs/tags/v1.1.3.tar.gz"
-  sha256 "319247937b10482afffdb4a9458676ff15f497771353537eda1f180d49a1be83"
+  sha256 "876de851d0e86609c89bf9cf83c77de68423feb9b7f3003c8122938a0dbc66e0"
   license "MIT"
   version "1.1.3"
 
