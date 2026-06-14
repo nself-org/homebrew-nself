@@ -47,6 +47,10 @@ jobs:
           ls "$tap_path/Formula/nself.rb"
 
       - name: brew install --build-from-source nself
+        env:
+          # Bubblewrap sandbox is not available on GitHub-hosted ubuntu runners.
+          # Set this env var so Homebrew skips the Linux sandbox check.
+          HOMEBREW_NO_SANDBOX_LINUX: "1"
         run: |
           brew install --build-from-source --verbose nself-org/nself/nself
 
