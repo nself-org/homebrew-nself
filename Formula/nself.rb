@@ -1,25 +1,28 @@
+# Formula auto-updated by goreleaser on each CLI release.
+# Dual-arch sha256 blocks use the pre-built darwin binaries published to GitHub
+# Releases (nself-<ver>-darwin-{arm64,amd64}.tar.gz). The sha256 values are
+# taken from the release's checksums.txt and must be kept in sync with the tag.
 class Nself < Formula
   desc "Self-hosted backend infrastructure CLI: Postgres, GraphQL, Auth, Nginx in 5 minutes"
   homepage "https://nself.org"
-  url "https://github.com/nself-org/cli/archive/refs/tags/v1.1.7.tar.gz"
-  sha256 "56cc86cd1b345a65fd6f63f2a60588f6cf126c029cec7f84b1d42faafee37978"
-  license "MIT"
   version "1.1.7"
+  license "MIT"
 
-  depends_on "go" => :build
+  on_arm do
+    url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-arm64.tar.gz"
+    sha256 "f66b565bc055ff8246c26d0337d9ed2c651e55d3917dae89957c91e686250021"
+  end
+
+  on_intel do
+    url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-amd64.tar.gz"
+    sha256 "c87572b7c2533c8d5b2c5253858e2c65942f7ae75e9068b6bcc86f56be93700b"
+  end
+
   depends_on "docker"
   depends_on "docker-compose"
 
   def install
-    ldflags = %W[
-      -s -w
-      -X github.com/nself-org/cli/internal/version.Version=#{version}
-    ]
-
-    system "go", "build", "-mod=vendor", "-ldflags", ldflags.join(" "),
-           "-o", bin/"nself", "./cmd/nself/"
-
-    doc.install "LICENSE" if File.exist?("LICENSE")
+    bin.install "nself"
   end
 
   test do
