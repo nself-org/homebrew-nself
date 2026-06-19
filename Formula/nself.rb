@@ -10,12 +10,12 @@ class Nself < Formula
 
   on_arm do
     url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-arm64.tar.gz"
-    sha256 "f66b565bc055ff8246c26d0337d9ed2c651e55d3917dae89957c91e686250021"
+    sha256 "c0c482209beb487d5b6062433b8966b3972a18de6d8125274eea404d8d687d50"
   end
 
   on_intel do
     url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-amd64.tar.gz"
-    sha256 "c87572b7c2533c8d5b2c5253858e2c65942f7ae75e9068b6bcc86f56be93700b"
+    sha256 "221f6133d42541275d926238235ec8e16990e99f13c3c75d9353cfda9a92f89e"
   end
 
   depends_on "docker"
