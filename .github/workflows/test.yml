@@ -24,7 +24,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-13, ubuntu-latest]
+        # ubuntu-latest excluded: formula is macOS-only (on_macos blocks, no Linux URL).
+        # Homebrew throws "formula requires at least a URL" on Linux.
+        os: [macos-14, macos-13]
     runs-on: ${{ matrix.os }}
 
     steps:
