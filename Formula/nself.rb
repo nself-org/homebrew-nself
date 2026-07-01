@@ -1,11 +1,11 @@
-# Formula auto-updated by goreleaser on each CLI release.
+# Formula auto-updated on each CLI release.
 # Dual-arch sha256 blocks use the pre-built darwin binaries published to GitHub
 # Releases (nself-<ver>-darwin-{arm64,amd64}.tar.gz). The sha256 values are
 # taken from the release's checksums.txt and must be kept in sync with the tag.
 class Nself < Formula
   desc "Self-hosted backend CLI: Postgres, GraphQL, Auth, Nginx in minutes"
   homepage "https://nself.org"
-  version "1.1.9"
+  version "1.2.0"
   license "MIT"
 
   depends_on "docker"
@@ -14,12 +14,12 @@ class Nself < Formula
   on_macos do
     on_arm do
       url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-arm64.tar.gz"
-      sha256 "c0c482209beb487d5b6062433b8966b3972a18de6d8125274eea404d8d687d50"
+      sha256 "f0f69a7ec6291f85b4fdb1d7ea13fe0e9ba3e8e077aa979f599f33acdd685ac5"
     end
 
     on_intel do
       url "https://github.com/nself-org/cli/releases/download/v#{version}/nself-#{version}-darwin-amd64.tar.gz"
-      sha256 "221f6133d42541275d926238235ec8e16990e99f13c3c75d9353cfda9a92f89e"
+      sha256 "2586e1d5aa1583212f4eedfa91b3e20fccb4dafb717264221b22c61fc3d6066b"
     end
   end
 
