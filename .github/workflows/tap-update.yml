@@ -1,21 +1,25 @@
 name: Tap Auto-Update on CLI Release
 
 # USER ACTION REQUIRED:
-#   Set HOMEBREW_TAP_TOKEN in GitHub repo secrets for homebrew-nself
-#   (github.com/nself-org/homebrew-nself/settings/secrets/actions):
-#     HOMEBREW_TAP_TOKEN — GitHub Personal Access Token with `repo` scope on
-#                          nself-org/homebrew-nself. This allows the workflow
-#                          to push formula updates and open PRs against this tap.
-#                          Create at https://github.com/settings/tokens (classic, repo scope).
-#   Without HOMEBREW_TAP_TOKEN, this workflow skips the push/PR step gracefully (no-op success).
+#   Set HOMEBREW_TAP_TOKEN in the *cli* repo secrets (nself-org/cli), which is
+#   what sends the dispatch, and keep a matching token here for the push:
+#     HOMEBREW_TAP_TOKEN — classic GitHub PAT with `repo` scope on
+#                          nself-org/homebrew-nself. Mint at
+#                          https://github.com/settings/tokens.
+#   As of 2026-09-12 the cli-side token returns HTTP 401 (expired), so
+#   release.yml skips the dispatch and this workflow does not fire. Releases
+#   are updated by hand with `bump-version.sh --homebrew` until it is rotated.
+#   Without HOMEBREW_TAP_TOKEN here, this workflow skips gracefully (no-op).
 #
 # Triggers on:
 #   - repository_dispatch (type: cli-release) — sent by cli release.yml after publishing
-#   - workflow_dispatch — manual update with explicit version + sha256 inputs
+#   - workflow_dispatch — manual update; takes a version, and derives the hashes
 #
 # This workflow is the canonical tap-update entry point. It is separate from
 # update-formula.yml (which handles formula file edits) so that the tap-update
-# trigger logic can be evolved independently.
+# trigger logic can be evolved independently. Both share one implementation:
+# .github/scripts/update-formula.sh — see that file for why the formula must
+# never be written with a single sed'd sha256.
 
 on:
   repository_dispatch:
@@ -25,12 +29,16 @@ on:
       version:
         description: 'Version tag to update to (e.g. v1.1.1 or 1.1.1)'
         required: true
-      sha256:
-        description: 'SHA256 of the release tarball (leave blank to compute)'
-        required: false
 
 permissions:
   contents: read
+
+# Both this workflow and update-formula.yml answer the same cli-release
+# dispatch and both push to main. Sharing one literal group serialises them so
+# the second sees the first's commit instead of racing it to a non-fast-forward.
+concurrency:
+  group: homebrew-formula-write
+  cancel-in-progress: false
 
 jobs:
   tap-update:
@@ -60,56 +68,31 @@ jobs:
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
-      - name: Resolve version and SHA256
+      - name: Update Formula/nself.rb from the release checksums
         id: info
         if: steps.preflight.outputs.proceed == 'true'
+        env:
+          # client_payload.sha256 is deliberately IGNORED. The cli release
+          # workflow computes it from the GitHub *source* archive, which is not
+          # what this formula installs — it installs the pre-built darwin
+          # binaries. Writing that value into the arch blocks is the exact bug
+          # this step replaces. The hashes come from the release's
+          # checksums.txt, matched per asset filename.
+          VERSION: ${{ github.event.inputs.version || github.event.client_payload.version }}
         run: |
-          # Prefer workflow_dispatch input, then repository_dispatch payload
-          VERSION="${{ github.event.inputs.version || github.event.client_payload.version }}"
-          SHA256="${{ github.event.inputs.sha256 || github.event.client_payload.sha256 }}"
-
-          if [ -z "${VERSION}" ]; then
-            echo "ERROR: version not provided via dispatch payload or workflow_dispatch input"
-            exit 1
-          fi
-
-          # Normalize: ensure 'v' prefix
-          case "$VERSION" in
-            v*) : ;;
-            *)  VERSION="v${VERSION}" ;;
-          esac
-
-          PLAIN_VERSION="${VERSION#v}"
-          TARBALL_URL="https://github.com/nself-org/cli/archive/refs/tags/${VERSION}.tar.gz"
-
-          if [ -z "${SHA256}" ]; then
-            echo "Computing SHA256 for ${TARBALL_URL}..."
-            SHA256=$(curl -fsSL "$TARBALL_URL" | sha256sum | awk '{print $1}')
-          fi
-
-          echo "version=${VERSION}"               >> "$GITHUB_OUTPUT"
-          echo "plain_version=${PLAIN_VERSION}"   >> "$GITHUB_OUTPUT"
-          echo "tarball_url=${TARBALL_URL}"       >> "$GITHUB_OUTPUT"
-          echo "sha256=${SHA256}"                 >> "$GITHUB_OUTPUT"
-
-      - name: Update Formula/nself.rb
-        if: steps.preflight.outputs.proceed == 'true'
-        run: |
-          PLAIN_VERSION="${{ steps.info.outputs.plain_version }}"
-          TARBALL_URL="${{ steps.info.outputs.tarball_url }}"
-          SHA256="${{ steps.info.outputs.sha256 }}"
-          FORMULA="Formula/nself.rb"
-
-          sed -i "s|url \"https://github.com/nself-org/cli/archive/refs/tags/.*\"|url \"${TARBALL_URL}\"|" "$FORMULA"
-          sed -i "s|sha256 \"[a-f0-9]*\"|sha256 \"${SHA256}\"|"                                            "$FORMULA"
-          sed -i "s|version \"[0-9.]*\"|version \"${PLAIN_VERSION}\"|"                                    "$FORMULA"
-
-          echo "Formula updated:"
-          grep -E '^\s*(url|sha256|version)' "$FORMULA"
+          bash .github/scripts/update-formula.sh \
+            --version "${VERSION}" \
+            --formula Formula/nself.rb
 
       - name: Verify formula syntax
         if: steps.preflight.outputs.proceed == 'true'
         run: ruby -c Formula/nself.rb
+
+      - name: Assert the two arch hashes are distinct
+        if: steps.preflight.outputs.proceed == 'true'
+        # Belt and braces: the script already asserts this, but a formula is
+        # never pushed from here without the check being visible in the log.
+        run: bash .github/scripts/assert-dual-arch.sh Formula/nself.rb
 
       - name: Commit and push
         if: steps.preflight.outputs.proceed == 'true'
@@ -127,7 +110,10 @@ jobs:
       - name: Summary
         if: steps.preflight.outputs.proceed == 'true'
         run: |
-          echo "### Homebrew tap updated" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Formula: \`Formula/nself.rb\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Version: \`${{ steps.info.outputs.version }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- SHA256: \`${{ steps.info.outputs.sha256 }}\`" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Homebrew tap updated"
+            echo "- Formula: \`Formula/nself.rb\`"
+            echo "- Version: \`${{ steps.info.outputs.version }}\`"
+            echo "- darwin-arm64 sha256: \`${{ steps.info.outputs.sha256_arm64 }}\`"
+            echo "- darwin-amd64 sha256: \`${{ steps.info.outputs.sha256_amd64 }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
