@@ -7,10 +7,14 @@ on:
   # A formula change arrives as a pull request, so guarding only pushes to main
   # means the sha256 check runs after the mistake has already landed. That is
   # how a formula naming 1.3.1 with 1.2.7's hashes reached main twice.
+  # No paths filter. `audit` is a REQUIRED status check on main, and a required
+  # check that does not run reports nothing — GitHub holds it pending forever,
+  # so every pull request that did not touch Formula/** was permanently
+  # unmergeable. PR #63 (the tap-updater fix) hit exactly that. Running on all
+  # pull requests is also the stronger guard: it re-verifies the live hashes
+  # against the published assets on any change that could affect release
+  # automation, not just on edits to the formula file itself.
   pull_request:
-    paths:
-      - 'Formula/**'
-      - '.github/workflows/formula-audit.yml'
   release:
     types:
       - published
