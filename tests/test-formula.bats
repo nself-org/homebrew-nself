@@ -61,6 +61,94 @@ _require_nself() {
 }
 
 # ---------------------------------------------------------------------------
+# Dual-arch tier — the formula carries TWO sha256 values, one per architecture.
+#
+# Regression guard for the tap updater. nself-org/cli release.yml dispatches
+# `cli-release` carrying a single `sha256` computed from the GitHub SOURCE
+# archive. Both tap workflows used to sed that one value in with
+#   sed -i 's|sha256 "[a-f0-9]*"|sha256 "$SHA"|'
+# and sed without /g still substitutes once per LINE — so both the on_arm and
+# on_intel sha256 lines were overwritten with the same, wrong hash, and
+# `brew install nself` would fail its checksum on every Mac.
+#
+# Reproduced 2026-09-12: applying that sed to this formula matched 2 lines.
+# These tests make the failure loud at PR time instead of at user install time.
+# ---------------------------------------------------------------------------
+
+_block_sha() {
+  # $1 = arm|intel — read the sha256 from inside that on_* block only.
+  awk -v want="$1" '
+    /^[[:space:]]*on_arm do/        { block = "arm" }
+    /^[[:space:]]*on_intel do/      { block = "intel" }
+    /^[[:space:]]*end[[:space:]]*$/ { block = "" }
+    block == want && /^[[:space:]]*sha256[[:space:]]*"/ {
+      s = $0; sub(/.*sha256[[:space:]]*"/, "", s); sub(/".*/, "", s); print s; exit
+    }
+  ' "$FORMULA_FILE"
+}
+
+@test "static: formula has a sha256 in both the on_arm and on_intel blocks" {
+  [ -f "$FORMULA_FILE" ]
+  arm="$(_block_sha arm)"
+  intel="$(_block_sha intel)"
+  [ -n "$arm" ]
+  [ -n "$intel" ]
+}
+
+@test "static: both arch sha256 values are well-formed 64-hex" {
+  [ -f "$FORMULA_FILE" ]
+  for v in "$(_block_sha arm)" "$(_block_sha intel)"; do
+    printf '%s' "$v" | grep -qE '^[0-9a-f]{64}$'
+  done
+}
+
+@test "static: the two arch sha256 values are NOT equal to each other" {
+  # Two different binaries cannot share a hash. Equality here means a
+  # single-value updater overwrote both lines. This is THE regression guard.
+  [ -f "$FORMULA_FILE" ]
+  arm="$(_block_sha arm)"
+  intel="$(_block_sha intel)"
+  if [ "$arm" = "$intel" ]; then
+    printf 'on_arm and on_intel both carry %s\n' "$arm"
+    printf 'A single-value sed overwrote both sha256 lines.\n'
+    printf 'See .github/scripts/update-formula.sh for the per-block writer.\n'
+    return 1
+  fi
+}
+
+@test "static: no url points at the source archive (archive/refs/tags)" {
+  # The companion half of the same bug: the old updater also rewrote url to
+  # the source tarball. This formula installs pre-built darwin binaries.
+  [ -f "$FORMULA_FILE" ]
+  ! grep -qE '^[[:space:]]*url[[:space:]]*"[^"]*archive/refs/tags/' "$FORMULA_FILE"
+}
+
+@test "static: assert-dual-arch.sh agrees (offline tier)" {
+  guard="$(dirname "$BATS_TEST_DIRNAME")/.github/scripts/assert-dual-arch.sh"
+  [ -f "$guard" ] || skip "assert-dual-arch.sh not present"
+  run bash "$guard" "$FORMULA_FILE"
+  [ "$status" -eq 0 ]
+}
+
+# ---------------------------------------------------------------------------
+# Network tier — needs the release to be published
+# ---------------------------------------------------------------------------
+
+@test "network: neither arch sha256 equals the source-tarball hash" {
+  # The source archive's hash is what the broken updater wrote. If it ever
+  # appears in an arch block again, fail here.
+  #
+  # The formula legitimately precedes the release in this project's flow
+  # (cli release.yml refuses to publish until the formula names the new
+  # version), so an unpublished tag SKIPS rather than fails.
+  command -v curl >/dev/null 2>&1 || skip "curl not available"
+  guard="$(dirname "$BATS_TEST_DIRNAME")/.github/scripts/assert-dual-arch.sh"
+  [ -f "$guard" ] || skip "assert-dual-arch.sh not present"
+  CHECK_SOURCE_HASH=1 run bash "$guard" "$FORMULA_FILE"
+  [ "$status" -eq 0 ]
+}
+
+# ---------------------------------------------------------------------------
 # Brew tier — requires brew in PATH
 # ---------------------------------------------------------------------------
 

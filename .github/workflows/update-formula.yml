@@ -1,5 +1,17 @@
 name: Update Formula on Release
 
+# Formula writer for a published CLI release.
+#
+# Shares its implementation with tap-update.yml via
+# .github/scripts/update-formula.sh. Read the header of that script before
+# changing anything here: the formula is dual-arch, and a single sed'd sha256
+# silently corrupts BOTH arch blocks.
+#
+# Unlike tap-update.yml this workflow uses the default GITHUB_TOKEN, so it
+# needs no secret and will run on the cli-release dispatch even while
+# HOMEBREW_TAP_TOKEN is expired — which is precisely why its formula-writing
+# logic had to be fixed rather than left dormant.
+
 on:
   repository_dispatch:
     types: [cli-release]
@@ -8,9 +20,11 @@ on:
       version:
         description: 'Version tag to update to (e.g. v1.0.0)'
         required: true
-      sha256:
-        description: 'SHA256 of the release tarball (leave blank to compute)'
-        required: false
+
+# Shared with tap-update.yml: both answer cli-release and both push to main.
+concurrency:
+  group: homebrew-formula-write
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -22,63 +36,24 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Resolve version and SHA256
+      - name: Update Formula/nself.rb from the release checksums
         id: info
+        env:
+          # client_payload.sha256 is deliberately IGNORED — see tap-update.yml
+          # and .github/scripts/update-formula.sh. It is the source-archive
+          # hash, not either darwin binary's.
+          VERSION: ${{ github.event.inputs.version || github.event.client_payload.version }}
         run: |
-          # Prefer workflow_dispatch input, then repository_dispatch payload
-          VERSION="${{ github.event.inputs.version || github.event.client_payload.version }}"
-          SHA256="${{ github.event.inputs.sha256 || github.event.client_payload.sha256 }}"
-
-          if [ -z "$VERSION" ]; then
-            echo "ERROR: version not provided"
-            exit 1
-          fi
-
-          # Normalize: ensure 'v' prefix
-          case "$VERSION" in
-            v*) : ;;
-            *)  VERSION="v${VERSION}" ;;
-          esac
-
-          # Strip 'v' prefix for the plain version number used in formula
-          PLAIN_VERSION="${VERSION#v}"
-
-          TARBALL_URL="https://github.com/nself-org/cli/archive/refs/tags/${VERSION}.tar.gz"
-
-          # Compute SHA256 if not supplied
-          if [ -z "$SHA256" ]; then
-            echo "Computing SHA256 for ${TARBALL_URL}..."
-            SHA256=$(curl -fsSL "$TARBALL_URL" | sha256sum | awk '{print $1}')
-          fi
-
-          echo "version=${VERSION}"           >> "$GITHUB_OUTPUT"
-          echo "plain_version=${PLAIN_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "tarball_url=${TARBALL_URL}"   >> "$GITHUB_OUTPUT"
-          echo "sha256=${SHA256}"             >> "$GITHUB_OUTPUT"
-
-      - name: Update Formula/nself.rb
-        run: |
-          VERSION="${{ steps.info.outputs.plain_version }}"
-          TARBALL_URL="${{ steps.info.outputs.tarball_url }}"
-          SHA256="${{ steps.info.outputs.sha256 }}"
-          FORMULA="Formula/nself.rb"
-
-          # Update url
-          sed -i "s|url \"https://github.com/nself-org/cli/archive/refs/tags/.*\"|url \"${TARBALL_URL}\"|" "$FORMULA"
-
-          # Update sha256
-          sed -i "s|sha256 \"[a-f0-9]*\"|sha256 \"${SHA256}\"|" "$FORMULA"
-
-          # Update version
-          sed -i "s|version \"[0-9.]*\"|version \"${VERSION}\"|" "$FORMULA"
-
-          echo "Formula updated:"
-          grep -E 'url|sha256|version' "$FORMULA"
+          bash .github/scripts/update-formula.sh \
+            --version "${VERSION}" \
+            --formula Formula/nself.rb
 
       - name: Verify formula syntax
-        run: |
-          # Basic Ruby syntax check (brew audit not available without Homebrew)
-          ruby -c Formula/nself.rb
+        # Basic Ruby syntax check (brew audit not available without Homebrew)
+        run: ruby -c Formula/nself.rb
+
+      - name: Assert the two arch hashes are distinct
+        run: bash .github/scripts/assert-dual-arch.sh Formula/nself.rb
 
       - name: Commit and push
         run: |
@@ -86,11 +61,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Formula/nself.rb
           if git diff --cached --quiet; then
-            echo "✓ Formula already at ${{ steps.info.outputs.version }} — no update needed."
+            echo "Formula already at ${{ steps.info.outputs.version }} — no update needed."
             exit 0
           fi
-          git commit -m "formula: update nself to ${{ steps.info.outputs.version }}" || {
-            echo "✓ Formula already at ${{ steps.info.outputs.version }} — no-op update (graceful exit)."
-            exit 0
-          }
+          git commit -m "formula: update nself to ${{ steps.info.outputs.version }}"
           git push origin main
+
+      - name: Summary
+        run: |
+          {
+            echo "### Formula updated"
+            echo "- Version: \`${{ steps.info.outputs.version }}\`"
+            echo "- darwin-arm64 sha256: \`${{ steps.info.outputs.sha256_arm64 }}\`"
+            echo "- darwin-amd64 sha256: \`${{ steps.info.outputs.sha256_amd64 }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

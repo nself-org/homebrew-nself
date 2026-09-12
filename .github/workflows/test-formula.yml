@@ -30,6 +30,12 @@ jobs:
         # Verifies formula has required fields (desc, homepage, url, sha256, install, test).
         run: bats --filter "static:" tests/test-formula.bats
 
+      - name: Run dual-arch regression tests (network tier)
+        # The two sha256 values must never collapse into one, and neither may
+        # be the source-archive hash. Skips cleanly when the tag is not yet
+        # published — the formula precedes the release by design here.
+        run: bats --filter "network:" tests/test-formula.bats
+
       - name: Audit formula syntax
         # brew audit --strict checks Ruby syntax and SPDX license — no install required.
         # Non-zero exit with warnings-only (no "Error:" lines) is acceptable.
