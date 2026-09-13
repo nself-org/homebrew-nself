@@ -59,7 +59,10 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add Formula/nself.rb
+          # README.md carries the same version; update-formula.sh keeps it in
+          # step and hygiene.yml fails the build when the two disagree. Staging
+          # only the formula is what let the README sit five releases stale.
+          git add Formula/nself.rb README.md
           if git diff --cached --quiet; then
             echo "Formula already at ${{ steps.info.outputs.version }} — no update needed."
             exit 0

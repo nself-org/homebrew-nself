@@ -198,6 +198,38 @@ else
   note "${FORMULA} amd64    ${OLD_AMD:0:12}... -> ${SHA_AMD:0:12}..."
 fi
 
+# ---------------------------------------------------------------------------
+# 7. Keep README.md's "Current Version" line in step with the formula.
+#
+#    This updater bumped Formula/nself.rb on every release but never touched
+#    the README, so the README sat at v1.1.0 while the formula tracked five
+#    further releases (found 2026-09-13: formula 1.3.6, README v1.1.0). A
+#    hand-maintained duplicate of a generated value drifts by construction, so
+#    the generator owns both and hygiene.yml fails the build if they disagree.
+#
+#    Deliberately tolerant: a repo without the marker line is left alone rather
+#    than failing the release. The hygiene gate is what makes drift loud.
+# ---------------------------------------------------------------------------
+README="${README:-README.md}"
+if [ -f "$README" ] && grep -qE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release' "$README"; then
+  OLD_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+  if [ "$OLD_README_VER" != "$PLAIN" ]; then
+    RTMP="$(mktemp)"
+    sed -E "s|^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release|- **v${PLAIN}** - Current release|" \
+      "$README" > "$RTMP"
+    cat "$RTMP" > "$README"
+    rm -f "$RTMP"
+    # Assert the write landed — a silent no-op here is exactly how the drift
+    # above went unnoticed for five releases.
+    NEW_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+    [ "$NEW_README_VER" = "$PLAIN" ] \
+      || die "README version did not update (still '${NEW_README_VER}', wanted '${PLAIN}')"
+    note "${README} version  ${OLD_README_VER} -> ${PLAIN}"
+  else
+    note "SKIP ${README} — already at ${PLAIN}"
+  fi
+fi
+
 if [ -n "$GH_OUTPUT" ]; then
   {
     echo "version=${TAG}"

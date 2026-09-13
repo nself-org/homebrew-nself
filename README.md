@@ -34,7 +34,11 @@ See the main [nself repository](https://github.com/nself-org/cli) for full docum
 
 ## Current Version
 
-- **v1.1.0** - Current release
+<!-- x-release-version: kept in sync with Formula/nself.rb by
+     .github/scripts/update-formula.sh and enforced by the
+     "Formula and README versions agree" step in hygiene.yml.
+     Do not hand-edit — bump the formula and this follows. -->
+- **v1.3.6** - Current release
 
 ## Support
 
