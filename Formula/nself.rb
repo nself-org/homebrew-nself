@@ -5,7 +5,7 @@
 class Nself < Formula
   desc "Self-hosted backend CLI: Postgres, GraphQL, Auth, Nginx in minutes"
   homepage "https://nself.org"
-  version "1.4.1"
+  version "1.4.2"
   license "MIT"
 
   depends_on "docker"
