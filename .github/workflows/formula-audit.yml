@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@f8d4222eb633e65c2a0157383cf80861fc7fae7f  # no-tags; pinned 2026-05-03
+        uses: Homebrew/actions/setup-homebrew@1e34f2e2acaa766b7efacb8c26352e6abbb023f9  # no-tags; pinned 2026-05-03
 
       - name: Audit formula syntax (strict)
         # brew audit --strict validates Ruby syntax, SPDX license, and formula structure
