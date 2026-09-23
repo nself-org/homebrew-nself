@@ -38,7 +38,7 @@ See the main [nself repository](https://github.com/nself-org/cli) for full docum
      .github/scripts/update-formula.sh and enforced by the
      "Formula and README versions agree" step in hygiene.yml.
      Do not hand-edit — bump the formula and this follows. -->
-- **v1.4.10** - Current release
+- **v1.4.11** - Current release
 
 ## Support
 
