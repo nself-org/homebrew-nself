@@ -1,0 +1,97 @@
+# Brew install smoke (P7-SHIP-10)
+#
+# What it proves: a clean GitHub-hosted macOS runner can `brew tap nself-org/nself`,
+# `brew install nself-org/nself/nself`, and the installed binary reports the version
+# the dispatcher named. That is the user-facing Homebrew path, proven off the
+# maintainer's machine (X-44 forbids installing on the builder's box).
+#
+# Who dispatches it: a maintainer, by hand, after a release lands in the tap.
+# P7-SHIP-01 and P7-SHIP-06 (release rehearsal and ship) use it as their brew proof:
+#   gh workflow run brew-install-smoke.yml -R nself-org/homebrew-nself --ref main -f version=X.Y.Z
+# A dispatch whose version differs from the formula's version fails at the version
+# assertion by design (the check that catches a stale tap).
+#
+# Steps: validate input -> tap -> install -> assert `nself version` -> `brew test` -> uninstall.
+# Scope: manual dispatch is the only trigger. No automatic triggers, no secret, no cache.
+# It installs from the published tap, never from checked-out files, so it does not check
+# out the repository at all.
+
+name: Brew Install Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'nself version the tap must install, X.Y.Z (no leading v)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: brew-install-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  HOMEBREW_NO_ANALYTICS: '1'
+  HOMEBREW_NO_INSTALL_CLEANUP: '1'
+  HOMEBREW_NO_ENV_HINTS: '1'
+
+jobs:
+  smoke:
+    name: Install nself from the tap
+    runs-on: macos-14
+    timeout-minutes: 20
+    env:
+      WANT_VERSION: ${{ inputs.version }}
+
+    steps:
+      - name: Validate version input
+        # The input reaches the shell only through the environment, never through
+        # ${{ }} interpolation inside the script.
+        run: |
+          set -eu
+          if ! printf '%s' "$WANT_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version must match ^[0-9]+\.[0-9]+\.[0-9]+\$ (got '$WANT_VERSION')"
+            exit 2
+          fi
+          echo "Requested version: $WANT_VERSION"
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@848c272c7bfe984a197bd4d16383f4c106ec61e6  # no-tags; same pin as test-formula.yml
+
+      - name: Tap nself-org/nself
+        run: |
+          set -eu
+          brew tap nself-org/nself
+          brew tap-info nself-org/nself
+
+      - name: Install nself from the tap
+        run: |
+          set -eu
+          brew install nself-org/nself/nself
+          command -v nself
+
+      - name: Assert nself version prints the requested version
+        run: |
+          set -eu
+          OUT=$(nself version 2>&1) || { echo "$OUT"; echo "::error::nself version exited non-zero"; exit 1; }
+          echo "nself version output:"
+          echo "$OUT"
+          # Exact semver token match, so 1.4.1 never satisfies 1.4.12.
+          if printf '%s\n' "$OUT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | grep -Fxq -- "$WANT_VERSION"; then
+            echo "OK: nself version printed $WANT_VERSION"
+          else
+            echo "::error::nself version did not print $WANT_VERSION (the tap installed a different version)"
+            exit 1
+          fi
+
+      - name: Run the formula test block
+        run: brew test nself-org/nself/nself
+
+      - name: Uninstall
+        # No untap: setup-homebrew's post step removes the tap directory itself and
+        # fails if it is already gone. The runner is discarded after the job.
+        if: always()
+        run: brew uninstall nself-org/nself/nself || true
