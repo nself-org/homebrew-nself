@@ -1,16 +1,25 @@
 name: Update Formula on Release
 
-# Formula writer for a published CLI release.
+# The single fallback `cli-release` listener. The normal release path is cli's
+# release script (scripts/release/release.sh), which opens the formula PR with
+# the owner's gh and `update-formula.sh --checksums-file`. This workflow covers
+# a `cli-release` repository_dispatch (or a manual dispatch) after the release
+# is published: it writes the formula from the published checksums.txt and
+# opens a PULL REQUEST. It never pushes to main (main is protected) and uses no
+# PAT, only the default GITHUB_TOKEN.
 #
-# Shares its implementation with tap-update.yml via
-# .github/scripts/update-formula.sh. Read the header of that script before
-# changing anything here: the formula is dual-arch, and a single sed'd sha256
-# silently corrupts BOTH arch blocks.
+# Required checks on main: `audit` (formula-audit.yml) and
+# `Test nself Homebrew Formula` (test-formula.yml). Events created by
+# GITHUB_TOKEN do not start pull_request runs, but workflow_dispatch does, so
+# after opening the PR this workflow dispatches both on the PR branch; GitHub
+# attaches those runs to the PR by head commit.
 #
-# Unlike tap-update.yml this workflow uses the default GITHUB_TOKEN, so it
-# needs no secret and will run on the cli-release dispatch even while
-# HOMEBREW_TAP_TOKEN is expired — which is precisely why its formula-writing
-# logic had to be fixed rather than left dormant.
+# Dry run: dispatch with dry_run_pr=true to exercise the whole path. It opens a
+# draft PR from `formula/<tag>-dryrun` (an empty commit when the formula is
+# already current) and runs the checks. Close that PR unmerged.
+#
+# Read .github/scripts/update-formula.sh before changing the write step: the
+# formula is dual-arch, and a single sed'd sha256 silently corrupts both blocks.
 
 on:
   repository_dispatch:
@@ -20,8 +29,14 @@ on:
       version:
         description: 'Version tag to update to (e.g. v1.0.0)'
         required: true
+      dry_run_pr:
+        description: 'Open a draft PR on formula/<tag>-dryrun even when the formula is current'
+        type: boolean
+        default: false
 
-# Shared with tap-update.yml: both answer cli-release and both push to main.
+permissions:
+  contents: read
+
 concurrency:
   group: homebrew-formula-write
   cancel-in-progress: false
@@ -33,14 +48,15 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@v7
 
       - name: Update Formula/nself.rb from the release checksums
         id: info
         env:
-          # client_payload.sha256 is deliberately IGNORED — see tap-update.yml
-          # and .github/scripts/update-formula.sh. It is the source-archive
+          # client_payload.sha256 is deliberately IGNORED — see
+          # .github/scripts/update-formula.sh. It is the source-archive
           # hash, not either darwin binary's.
           VERSION: ${{ github.event.inputs.version || github.event.client_payload.version }}
         run: |
@@ -55,26 +71,79 @@ jobs:
       - name: Assert the two arch hashes are distinct
         run: bash .github/scripts/assert-dual-arch.sh Formula/nself.rb
 
-      - name: Commit and push
+      - name: Commit on a branch and open a pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.info.outputs.version }}
+          DRY_RUN: ${{ github.event.inputs.dry_run_pr }}
         run: |
+          set -euo pipefail
+          branch="formula/${TAG}"
+          if [ "${DRY_RUN}" = "true" ]; then branch="${branch}-dryrun"; fi
+
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "${branch}"
           # README.md carries the same version; update-formula.sh keeps it in
-          # step and hygiene.yml fails the build when the two disagree. Staging
-          # only the formula is what let the README sit five releases stale.
+          # step and hygiene.yml fails the build when the two disagree.
           git add Formula/nself.rb README.md
           if git diff --cached --quiet; then
-            echo "Formula already at ${{ steps.info.outputs.version }} — no update needed."
-            exit 0
+            if [ "${DRY_RUN}" != "true" ]; then
+              echo "Formula already at ${TAG} — no update needed."
+              echo "opened=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            git commit --allow-empty -m "formula: dry run for nself ${TAG}"
+          else
+            git commit -m "formula: update nself to ${TAG}"
           fi
-          git commit -m "formula: update nself to ${{ steps.info.outputs.version }}"
-          git push origin main
+          # A formula/* branch is bot-owned; a rerun replaces its earlier push.
+          git push --force origin "${branch}"
+
+          number="$(gh pr list --head "${branch}" --state open --json number -q '.[0].number')"
+          if [ -z "${number}" ]; then
+            flags=""
+            title="formula: update nself to ${TAG}"
+            if [ "${DRY_RUN}" = "true" ]; then
+              flags="--draft"
+              title="formula: dry run for nself ${TAG} (do not merge)"
+            fi
+            # shellcheck disable=SC2086
+            gh pr create --base main --head "${branch}" ${flags} \
+              --title "${title}" \
+              --body "Written by update-formula.yml from the ${TAG} release checksums. Required checks are dispatched on this branch by the workflow."
+          fi
+          echo "opened=true" >> "$GITHUB_OUTPUT"
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+
+      - name: Run the required checks on the PR branch
+        # GITHUB_TOKEN pull_request events start no workflows, workflow_dispatch
+        # does. Both runs report on the branch head, which the PR shows.
+        if: steps.pr.outputs.opened == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: |
+          gh workflow run test-formula.yml --ref "${BRANCH}"
+          gh workflow run formula-audit.yml --ref "${BRANCH}"
 
       - name: Summary
+        env:
+          TAG: ${{ steps.info.outputs.version }}
+          ARM: ${{ steps.info.outputs.sha256_arm64 }}
+          AMD: ${{ steps.info.outputs.sha256_amd64 }}
+          OPENED: ${{ steps.pr.outputs.opened }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
         run: |
           {
-            echo "### Formula updated"
-            echo "- Version: \`${{ steps.info.outputs.version }}\`"
-            echo "- darwin-arm64 sha256: \`${{ steps.info.outputs.sha256_arm64 }}\`"
-            echo "- darwin-amd64 sha256: \`${{ steps.info.outputs.sha256_amd64 }}\`"
+            echo "### Formula update"
+            echo "- Version: \`${TAG}\`"
+            echo "- darwin-arm64 sha256: \`${ARM}\`"
+            echo "- darwin-amd64 sha256: \`${AMD}\`"
+            if [ "${OPENED}" = "true" ]; then
+              echo "- Pull request branch: \`${BRANCH}\` (merge via the owner's admin-merge path)"
+            else
+              echo "- Formula already current; no pull request opened"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"

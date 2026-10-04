@@ -13,11 +13,13 @@ on:
     paths:
       - 'Formula/nself.rb'
       - '.github/workflows/test.yml'
+      - '.github/scripts/**'
   pull_request:
     branches: [main]
     paths:
       - 'Formula/nself.rb'
       - '.github/workflows/test.yml'
+      - '.github/scripts/**'
   workflow_dispatch:  # allow manual re-runs on demand
 
 concurrency:
@@ -25,6 +27,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The formula writer's fixture test: no network, no Homebrew.
+  update-formula-script:
+    name: update-formula.sh fixture test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run update-formula.sh fixture tests
+        run: bash .github/scripts/test-update-formula.sh
+
   install-smoke:
     name: brew install smoke (${{ matrix.os }})
     strategy:

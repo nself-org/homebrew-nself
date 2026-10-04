@@ -1,0 +1,2 @@
+3c1f0b8e5d2a47c9a6e1f4b7d8c0a9e2b5f6d3c4a1e8b7f09c2d5a6e3b4f1c70  nself-9.9.9-darwin-arm64.tar.gz
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc  nself-9.9.9-linux-amd64.tar.gz
