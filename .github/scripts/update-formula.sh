@@ -229,7 +229,7 @@ fi
 # ---------------------------------------------------------------------------
 README="${README:-README.md}"
 if [ -f "$README" ] && grep -qE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release' "$README"; then
-  OLD_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+  OLD_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '* v-')"
   if [ "$OLD_README_VER" != "$PLAIN" ]; then
     RTMP="$(mktemp)"
     sed -E "s|^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release|- **v${PLAIN}** - Current release|" \
@@ -238,7 +238,7 @@ if [ -f "$README" ] && grep -qE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current re
     rm -f "$RTMP"
     # Assert the write landed — a silent no-op here is exactly how the drift
     # above went unnoticed for five releases.
-    NEW_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+    NEW_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '* v-')"
     [ "$NEW_README_VER" = "$PLAIN" ] \
       || die "README version did not update (still '${NEW_README_VER}', wanted '${PLAIN}')"
     note "${README} version  ${OLD_README_VER} -> ${PLAIN}"

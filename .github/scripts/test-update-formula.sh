@@ -127,4 +127,18 @@ run_script --version v9.9.9 --checksums-file "${FIX}/checksums.txt" >"${WORK}/ou
 grep -q 'SKIP' "${WORK}/out5" || fail "case 5: second run did not skip"
 pass "idempotent on a formula already at the target"
 
+# Case 6: README's "Current release" line follows the formula, and a README
+# already at the target is left alone. Exercises the tr/grep pipeline on the
+# runner's own coreutils (GNU tr rejects a `*-` range that BSD tr accepts).
+fresh_formula
+printf '# nself\n\n- **v9.9.8** - Current release\n' > "${WORK}/run/README.md"
+run_script --version v9.9.9 --checksums-file "${FIX}/checksums.txt" >"${WORK}/out6" 2>&1 \
+  || { cat "${WORK}/out6" >&2; fail "case 6: exit non-zero"; }
+grep -q '^- \*\*v9\.9\.9\*\* - Current release' "${WORK}/run/README.md" || fail "case 6: README not updated"
+run_script --version v9.9.9 --checksums-file "${FIX}/checksums.txt" >"${WORK}/out6b" 2>&1 \
+  || { cat "${WORK}/out6b" >&2; fail "case 6: rerun exit non-zero"; }
+grep -q 'README.md — already at 9.9.9' "${WORK}/out6b" || fail "case 6: README rerun did not skip"
+rm -f "${WORK}/run/README.md"
+pass "README current-release line follows the formula"
+
 printf 'all update-formula.sh cases passed\n'
