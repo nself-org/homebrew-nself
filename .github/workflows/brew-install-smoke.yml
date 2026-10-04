@@ -12,9 +12,9 @@
 # assertion by design (the check that catches a stale tap).
 #
 # Steps: validate input -> tap -> install -> assert `nself version` -> `brew test` -> uninstall.
-# Scope: workflow_dispatch only. No push, pull_request or schedule trigger, no secret,
-# no cache. It installs from the published tap, never from the checked-out files, so it
-# does not check out the repository at all.
+# Scope: manual dispatch is the only trigger. No automatic triggers, no secret, no cache.
+# It installs from the published tap, never from checked-out files, so it does not check
+# out the repository at all.
 
 name: Brew Install Smoke
 
