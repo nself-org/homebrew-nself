@@ -15,6 +15,8 @@ on:
   # against the published assets on any change that could affect release
   # automation, not just on edits to the formula file itself.
   pull_request:
+  # update-formula.yml dispatches this on its PR branch (see test-formula.yml).
+  workflow_dispatch:
   release:
     types:
       - published

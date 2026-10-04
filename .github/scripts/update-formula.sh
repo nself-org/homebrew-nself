@@ -9,6 +9,13 @@
 # Inputs:    --version <vX.Y.Z|X.Y.Z>   release tag to update to (required)
 #            --formula <path>           formula file (default: Formula/nself.rb)
 #            --repo    <owner/name>     release source (default: nself-org/cli)
+#            --checksums-file <path>    optional; read checksums.txt from this
+#                                       local file instead of fetching it from
+#                                       the release. Lets the formula be written
+#                                       from the build run's checksums BEFORE
+#                                       the release is published (cli release.yml
+#                                       needs the formula first). The source
+#                                       archive guard (step 3) still runs.
 #            --github-output <path>     optional; appends version/sha outputs
 # Outputs:   Formula rewritten in place; summary on stdout; non-zero exit on any
 #            validation failure. Idempotent — a formula already carrying the
@@ -38,6 +45,7 @@ VERSION=""
 FORMULA="Formula/nself.rb"
 SOURCE_REPO="nself-org/cli"
 GH_OUTPUT="${GITHUB_OUTPUT:-}"
+CHECKSUMS_FILE=""
 
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 note() { printf '  %s\n' "$*"; }
@@ -47,6 +55,7 @@ while [ $# -gt 0 ]; do
     --version)       VERSION="${2:-}"; shift 2 ;;
     --formula)       FORMULA="${2:-}"; shift 2 ;;
     --repo)          SOURCE_REPO="${2:-}"; shift 2 ;;
+    --checksums-file) CHECKSUMS_FILE="${2:-}"; shift 2 ;;
     --github-output) GH_OUTPUT="${2:-}"; shift 2 ;;
     *) die "unknown argument: $1" ;;
   esac
@@ -67,19 +76,27 @@ ASSET_ARM="nself-${PLAIN}-darwin-arm64.tar.gz"
 ASSET_AMD="nself-${PLAIN}-darwin-amd64.tar.gz"
 
 # ---------------------------------------------------------------------------
-# 1. Fetch checksums.txt for this release.
-#    The dispatch that calls this fires from the publish job, so the asset can
-#    be seconds old. Retry rather than fail a release on an upload race.
+# 1. Get checksums.txt for this release: from --checksums-file when given
+#    (build-run output, release not yet published), otherwise fetched.
+#    The fetching dispatch can fire seconds after the upload, so retry rather
+#    than fail a release on an upload race.
 # ---------------------------------------------------------------------------
 CHECKSUMS=""
-for attempt in 1 2 3 4 5; do
-  if CHECKSUMS="$(curl -fsSL --max-time 60 "${REL_BASE}/checksums.txt")"; then
-    break
-  fi
-  CHECKSUMS=""
-  note "checksums.txt not available yet (attempt ${attempt}/5) — retrying in $((attempt * 10))s"
-  sleep $((attempt * 10))
-done
+if [ -n "$CHECKSUMS_FILE" ]; then
+  [ -f "$CHECKSUMS_FILE" ] || die "--checksums-file not found: $CHECKSUMS_FILE"
+  [ -s "$CHECKSUMS_FILE" ] || die "--checksums-file is empty: $CHECKSUMS_FILE"
+  CHECKSUMS="$(cat "$CHECKSUMS_FILE")"
+  note "checksums read from ${CHECKSUMS_FILE}"
+else
+  for attempt in 1 2 3 4 5; do
+    if CHECKSUMS="$(curl -fsSL --max-time 60 "${REL_BASE}/checksums.txt")"; then
+      break
+    fi
+    CHECKSUMS=""
+    note "checksums.txt not available yet (attempt ${attempt}/5) — retrying in $((attempt * 10))s"
+    sleep $((attempt * 10))
+  done
+fi
 
 if [ -z "$CHECKSUMS" ]; then
   die "checksums.txt not found for ${TAG} at ${REL_BASE}/checksums.txt
@@ -212,7 +229,7 @@ fi
 # ---------------------------------------------------------------------------
 README="${README:-README.md}"
 if [ -f "$README" ] && grep -qE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release' "$README"; then
-  OLD_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+  OLD_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '* v-')"
   if [ "$OLD_README_VER" != "$PLAIN" ]; then
     RTMP="$(mktemp)"
     sed -E "s|^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current release|- **v${PLAIN}** - Current release|" \
@@ -221,7 +238,7 @@ if [ -f "$README" ] && grep -qE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\* - Current re
     rm -f "$RTMP"
     # Assert the write landed — a silent no-op here is exactly how the drift
     # above went unnoticed for five releases.
-    NEW_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '*- v')"
+    NEW_README_VER="$(grep -oE '^- \*\*v[0-9]+\.[0-9]+\.[0-9]+\*\*' "$README" | head -1 | tr -d '* v-')"
     [ "$NEW_README_VER" = "$PLAIN" ] \
       || die "README version did not update (still '${NEW_README_VER}', wanted '${PLAIN}')"
     note "${README} version  ${OLD_README_VER} -> ${PLAIN}"
