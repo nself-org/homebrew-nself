@@ -91,7 +91,7 @@ jobs:
         run: brew test nself-org/nself/nself
 
       - name: Uninstall
+        # No untap: setup-homebrew's post step removes the tap directory itself and
+        # fails if it is already gone. The runner is discarded after the job.
         if: always()
-        run: |
-          brew uninstall nself-org/nself/nself || true
-          brew untap nself-org/nself || true
+        run: brew uninstall nself-org/nself/nself || true
