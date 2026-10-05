@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@848c272c7bfe984a197bd4d16383f4c106ec61e6  # no-tags; pinned 2026-05-03
+        uses: Homebrew/actions/setup-homebrew@e99025eb970cfa124b8284a35463d87426917478  # no-tags; pinned 2026-05-03
 
       - name: Tap from local checkout
         run: |
