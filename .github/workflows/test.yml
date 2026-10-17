@@ -52,7 +52,7 @@ jobs:
         # 2026-07. As a required check that made every PR unmergeable. Replaced
         # with macos-latest (currently macos-26-arm64), keeping the old/new pair
         # the matrix is for.
-        os: [macos-14, macos-latest]
+        os: [macos-15, macos-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
