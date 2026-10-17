@@ -41,7 +41,7 @@ env:
 jobs:
   smoke:
     name: Install nself from the tap
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
     env:
       WANT_VERSION: ${{ inputs.version }}
