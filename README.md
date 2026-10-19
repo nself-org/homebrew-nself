@@ -32,13 +32,9 @@ nself urls
 
 See the main [nself repository](https://github.com/nself-org/cli) for full documentation.
 
-## Current Version
+## Versions
 
-<!-- x-release-version: kept in sync with Formula/nself.rb by
-     .github/scripts/update-formula.sh and enforced by the
-     "Formula and README versions agree" step in hygiene.yml.
-     Do not hand-edit — bump the formula and this follows. -->
-- **v1.4.15** - Current release
+The tap installs the release pinned in [Formula/nself.rb](Formula/nself.rb). Release notes for every version are on the [cli releases page](https://github.com/nself-org/cli/releases).
 
 ## Support
 

@@ -1,0 +1,9 @@
+# homebrew-nself truth rules (planned configuration, Epic TRUTH D17; draft by P7-TRUTH-04, copied by the sweep Ticket P7-TRUTH-29).
+# Includes the vendored org and claim rules (scripts/truth/vendor-rules.sh) and exempts, with a reason,
+# every path the sweep Tickets do not own. The sweep Tickets delete an exemption as they fix its file.
+version: 1
+include: [.github/truth/org.yaml, .github/truth/claims.yaml]
+allow:
+  - rule: "*"
+    paths: ["Formula/**"]
+    reason: "the Formula is written by the release chain"

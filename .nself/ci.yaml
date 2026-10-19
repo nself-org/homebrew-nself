@@ -1,0 +1,12 @@
+# nself-ci configuration for the homebrew-nself tap (contract:ci.pipeline-config v1).
+#
+# Purpose: turn on the truth gate for this repo (P7-TRUTH-29, Epic TRUTH D17).
+# Precedence: flag > env > this file > detected default (`nself ci config show`).
+# No jobs are declared: `checks.truth.rules` alone plans the truth check as a job
+# (ImpliedBy), so `nself-ci --job truth` runs it locally and in any future workflow.
+
+version: 1
+
+checks:
+  truth:
+    rules: [.github/truth.yaml]
