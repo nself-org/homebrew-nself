@@ -4,6 +4,6 @@
 version: 1
 include: [.github/truth/org.yaml, .github/truth/claims.yaml]
 allow:
-  - rule: "*"
+  - rule: "claims.*"
     paths: ["Formula/**"]
-    reason: "the Formula is written by the release chain"
+    reason: "the release chain writes the Formula version and checksums; the claim rules do not apply to them"

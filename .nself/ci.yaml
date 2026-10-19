@@ -2,8 +2,11 @@
 #
 # Purpose: turn on the truth gate for this repo (P7-TRUTH-29, Epic TRUTH D17).
 # Precedence: flag > env > this file > detected default (`nself ci config show`).
-# No jobs are declared: `checks.truth.rules` alone plans the truth check as a job
-# (ImpliedBy), so `nself-ci --job truth` runs it locally and in any future workflow.
+# No jobs are declared. `checks.truth.rules` is meant to plan the truth check as a job
+# (ImpliedBy), but nself-ci does not call that planner yet, so `nself-ci --job truth` reports E627 today
+# (lead ruling, hq TRUTH Epic Invalidations 2026-10-19; link tracked as P7-CI-37). Until then the gate is
+# `go run -mod=vendor ./internal/gates/truth/run.go check --json --root . .github/truth.yaml` from free/ci
+# of nself-org/plugins.
 
 version: 1
 
