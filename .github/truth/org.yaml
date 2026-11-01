@@ -1,4 +1,4 @@
-# VENDORED FROM nself-org/plugins@9af6fd8bd0078ba29fb043c24abb61b3c2a097de — DO NOT HAND EDIT
+# VENDORED FROM nself-org/plugins@ce5d909501b9b16bae614eeddc71a5732ab03ba5 — DO NOT HAND EDIT
 # nself-org truth rules (P7-CI-08, Epic CI D21). Read by the `truth` check of nself-ci.
 #
 # Purpose: keep three kinds of falsehood out of every nself-org repository:
