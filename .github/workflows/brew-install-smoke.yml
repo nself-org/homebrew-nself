@@ -59,7 +59,7 @@ jobs:
           echo "Requested version: $WANT_VERSION"
 
       - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@d482da0e602890d3160aade42e72c8556103bf04  # no-tags; same pin as test-formula.yml
+        uses: Homebrew/actions/setup-homebrew@c262868c096d909fc278daa87ed9772967331ea3  # no-tags; same pin as test-formula.yml
 
       - name: Tap nself-org/nself
         run: |
